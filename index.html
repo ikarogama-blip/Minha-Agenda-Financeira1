@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha Agenda Financeira</title>
+
+<!-- Fonte Inter e ícones FontAwesome (CDN) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ========== 1. TEMA (variáveis de cor) ========== */
+:root{
+  --bg:#0e1420; --surface:#161d2c; --surface2:#1d2638; --line:#2a3550;
+  --text:#e8edf7; --muted:#8f9bb5;
+  --gain:#2dd4a7; --loss:#ff6b6b; --goal:#f5b942; --brand:#5b8cff;
+  --radius:14px;
+}
+[data-theme="light"]{
+  --bg:#f2f5fa; --surface:#ffffff; --surface2:#eef2f9; --line:#dbe2ee;
+  --text:#18202f; --muted:#5f6b85;
+  --gain:#0f9d79; --loss:#d93f3f; --goal:#b97d08; --brand:#2f62e6;
+}
+
+/* ========== 2. BASE ========== */
+*{box-sizing:border-box;margin:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+
+/* ========== 3. CABEÇALHO ========== */
+header{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:22px}
+h1{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+h1 i{color:var(--brand);margin-right:8px}
+.head-tools{display:flex;gap:10px;align-items:center}
+.month-nav{display:flex;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px}
+.month-nav button{background:none;border:0;width:34px;height:34px;border-radius:50%;cursor:pointer;color:var(--muted)}
+.month-nav button:hover{background:var(--surface2);color:var(--text)}
+.month-nav input{background:none;border:0;width:150px;text-align:center;font-weight:600;cursor:pointer;color-scheme:dark}
+[data-theme="light"] .month-nav input{color-scheme:light}
+.icon-btn{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.icon-btn:hover{background:var(--surface2)}
+
+/* ========== 4. CARDS DE INDICADORES ========== */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.card .label{display:flex;justify-content:space-between;color:var(--muted);font-size:.85rem;font-weight:500}
+.card .value{font-size:1.65rem;font-weight:800;letter-spacing:-.02em;margin-top:6px}
+.card .sub{font-size:.8rem;color:var(--muted);margin-top:2px}
+/* Saldo é o destaque da página: faixa de cor à esquerda */
+.card.main{border-left:4px solid var(--brand)}
+.pos{color:var(--gain)} .neg{color:var(--loss)}
+.compare{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--surface2);margin-top:12px}
+
+
+
+/* ========== 5. LAYOUT PRINCIPAL ========== */
+.layout{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+.panel h2{font-size:1.05rem;font-weight:700;margin-bottom:14px}
+
+/* ========== 6. FORMULÁRIO ========== */
+form{display:grid;gap:12px}
+label{font-size:.8rem;font-weight:600;color:var(--muted);display:grid;gap:5px}
+input,select,textarea{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+textarea{resize:vertical;min-height:70px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.types input{position:absolute;opacity:0;width:0}
+.types label{cursor:pointer;text-align:center;padding:9px 4px;border:1px solid var(--line);border-radius:10px;font-size:.78rem;color:var(--text);background:var(--surface2)}
+.types input:checked+span{font-weight:700}
+.types label:has(input[value=venda]:checked){border-color:var(--gain);color:var(--gain)}
+.types label:has(input[value=perda]:checked){border-color:var(--loss);color:var(--loss)}
+.types label:has(input[value=conquista]:checked){border-color:var(--goal);color:var(--goal)}
+.types label:has(input:focus-visible){outline:2px solid var(--brand)}
+.btn{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:700;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.error{color:var(--loss);font-size:.8rem;min-height:1em}
+
+/* ========== 7. ABAS ========== */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border:1px solid var(--line);background:none;color:var(--muted);padding:7px 14px;border-radius:999px;cursor:pointer;font-size:.85rem;font-weight:600}
+.tab.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* ========== 8. TABELA ========== */
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:.78rem;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:12px 10px;border-bottom:1px solid var(--line);font-size:.9rem;vertical-align:top}
+tr:last-child td{border-bottom:0}
+.t-title{font-weight:600}
+.t-note{color:var(--muted);font-size:.78rem;margin-top:2px}
+.badge{display:inline-block;font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--surface2)}
+.badge.venda{color:var(--gain)} .badge.perda{color:var(--loss)} .badge.conquista{color:var(--goal)}
+.amount{font-weight:700;white-space:nowrap}
+.del{background:none;border:0;color:var(--muted);cursor:pointer;padding:6px;border-radius:8px}
+.del:hover{color:var(--loss);background:var(--surface2)}
+.empty{text-align:center;color:var(--muted);padding:34px 10px}
+
+/* Celular: cada linha da tabela vira um mini-card */
+@media(max-width:620px){
+  thead{display:none}
+  tr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:12px 0;border-bottom:1px solid var(--line)}
+  td{border:0;padding:2px 0}
+  td.c-act{grid-row:1;grid-column:2;text-align:right}
+  td.c-val{grid-column:2;text-align:right}
+  td.c-main{grid-column:1;grid-row:1 / span 3}
+  td.c-cat,td.c-date{display:none}
+}
+/* ========== 9. AUTENTICAÇÃO ========== */
+[hidden]{display:none!important}
+.auth{min-height:100vh;display:grid;place-items:center;background:radial-gradient(700px 420px at 50% 0%,color-mix(in srgb,var(--brand) 16%,transparent),transparent)}
+.auth-side{width:100%;display:grid;place-items:center;padding:24px 16px}
+.auth-box{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:32px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
+.brand-logo{font-weight:800;font-size:1.1rem;display:flex;gap:10px;align-items:center;color:var(--text);margin-bottom:22px}
+.brand-logo i{color:var(--brand)}
+.auth-box h2{font-size:1.75rem;font-weight:800;letter-spacing:-.02em}
+.auth-box .lead{color:var(--muted);margin:6px 0 22px}
+.field{position:relative;display:block}
+.field .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.field input{padding:13px 44px 13px 40px}
+.field input:focus{border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 25%,transparent);outline:0}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;width:36px;height:36px;color:var(--muted);cursor:pointer;border-radius:8px}
+.eye:hover{color:var(--text)}
+.meter{display:block;height:5px;border-radius:99px;background:var(--surface2);overflow:hidden;margin-top:2px}
+.meter span{display:block;height:100%;width:0;transition:width .25s,background .25s}
+.hint{display:block;font-size:.78rem;color:var(--muted);min-height:1.1em}
+.auth-form{gap:16px}
+#meterBox{display:grid;gap:6px}
+.auth-form .btn{padding:13px;font-size:.95rem}
+.btn.loading{opacity:.6;pointer-events:none}
+.error:not(:empty){background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.35);padding:9px 12px;border-radius:10px}
+.auth-note{color:var(--muted);font-size:.78rem;text-align:center;margin-top:18px}
+@media(max-width:480px){.auth-box{padding:24px 20px}}
+.switch{display:grid;grid-template-columns:1fr 1fr;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:16px}
+.switch button{border:0;background:none;padding:8px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600}
+.switch button.active{background:var(--surface);color:var(--text)}
+.user-chip{color:var(--muted);font-size:.85rem;display:flex;align-items:center;gap:6px;max-width:180px}
+.user-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logout{height:42px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600}
+.logout:hover{border-color:var(--loss);color:var(--loss)}
+/* ========== 10. ASSINATURA / BLOQUEIO ========== */
+.lock{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--loss) 15%,transparent);color:var(--loss);font-size:1.3rem;margin-bottom:14px}
+.pay-grid{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+.pay-grid div{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);font-size:.9rem}
+.pay-grid div:last-child{border-bottom:0}
+.pay-grid span{color:var(--muted)}
+.pix-box{background:var(--surface2);border:1px dashed var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;margin-bottom:16px}
+.pix-box small{color:var(--muted);font-size:.8rem}
+.pix-box code{font-size:1.45rem;font-weight:800;letter-spacing:.03em;user-select:all}
+.copy{justify-self:start;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:.82rem;font-weight:600}
+.copy:hover{border-color:var(--brand)}
+.wide{width:100%}
+.link-btn{background:none;border:0;color:var(--muted);width:100%;margin-top:10px;padding:8px;cursor:pointer}
+.link-btn:hover{color:var(--text)}
+.sub-chip{font-size:.78rem;font-weight:600;padding:6px 12px;border-radius:99px;background:color-mix(in srgb,var(--gain) 14%,transparent);color:var(--gain);white-space:nowrap}
+.sub-chip.warn{background:color-mix(in srgb,var(--goal) 16%,transparent);color:var(--goal)}
+@media(max-width:760px){.sub-chip{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+
+<body>
+<!-- ===== TELA DE LOGIN / CADASTRO ===== -->
+<main class="auth" id="auth" hidden>
+  <!-- Lado direito: formulário -->
+  <section class="auth-side">
+    <div class="auth-box">
+      <div class="brand-logo"><i class="fa-solid fa-wallet"></i> Minha Agenda Financeira</div>
+      <h2 id="authTitle">Bem-vindo de volta</h2>
+      <p class="lead" id="authLead">Entre para ver seus registros.</p>
+      <div class="switch" role="tablist">
+        <button type="button" class="active" id="modeLogin">Entrar</button>
+        <button type="button" id="modeRegister">Criar conta</button>
+      </div>
+      <form id="authForm" class="auth-form" novalidate>
+        <label id="nameField" hidden>Nome
+          <span class="field"><i class="fa-regular fa-user ic"></i>
+          <input type="text" id="authName" maxlength="60" autocomplete="name" placeholder="Seu nome"></span>
+        </label>
+        <label>E-mail
+          <span class="field"><i class="fa-regular fa-envelope ic"></i>
+          <input type="email" id="authEmail" maxlength="120" autocomplete="email" placeholder="voce@email.com"></span>
+        </label>
+        <label>Senha
+          <span class="field"><i class="fa-solid fa-lock ic"></i>
+          <input type="password" id="authPass" maxlength="100" autocomplete="current-password" placeholder="Mínimo de 8 caracteres">
+          <button type="button" class="eye" id="eye" aria-label="Mostrar ou ocultar senha"><i class="fa-regular fa-eye"></i></button></span>
+          <span id="meterBox" hidden><span class="meter"><span id="meterFill"></span></span><span class="hint" id="meterText"></span></span>
+        </label>
+        <div class="error" id="authError" role="alert"></div>
+        <button class="btn" type="submit" id="authSubmit">Entrar</button>
+      </form>
+      <p class="auth-note"><i class="fa-solid fa-shield-halved"></i> Seus dados ficam salvos apenas neste navegador.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ===== TELA DE PAGAMENTO PENDENTE (bloqueio) ===== -->
+<main class="auth" id="paywall" hidden>
+  <div class="auth-box">
+    <div class="brand-logo"><i class="fa-solid fa-wallet"></i> Minha Agenda Financeira</div>
+    <div class="lock"><i class="fa-solid fa-lock"></i></div>
+    <h2>Pagamento pendente</h2>
+    <p class="lead" id="payLead"></p>
+    <div class="pay-grid">
+      <div><span>Mensalidade</span><b id="payAmount"></b></div>
+      <div><span>Vencimento</span><b id="payDue"></b></div>
+      <div><span>Forma de pagamento</span><b><i class="fa-brands fa-pix"></i> PIX</b></div>
+    </div>
+    <div class="pix-box">
+      <small>Chave PIX (telefone)</small>
+      <code id="pixKey"></code>
+      <button type="button" class="copy" id="copyPix"><i class="fa-regular fa-copy"></i> Copiar chave</button>
+    </div>
+    <button class="btn wide" id="payBtn" type="button"><i class="fa-solid fa-circle-check"></i> Já realizei o pagamento</button>
+    <button class="link-btn" id="payLogout" type="button">Sair da conta</button>
+    <p class="auth-note">Versão de demonstração: o botão acima libera o acesso na hora, simulando a confirmação manual.</p>
+  </div>
+</main>
+
+<!-- ===== APLICATIVO (visível apenas com login) ===== -->
+<div class="wrap" id="app" hidden>
+
+  <!-- ===== CABEÇALHO: título, navegação de mês e tema ===== -->
+  <header>
+    <h1><i class="fa-solid fa-wallet"></i>Minha Agenda Financeira</h1>
+    <div class="head-tools">
+      <div class="month-nav">
+        <button id="prevMonth" aria-label="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button>
+        <!-- Seletor de mês e ano nativo -->
+        <input type="month" id="monthPicker" aria-label="Selecionar mês e ano">
+        <button id="nextMonth" aria-label="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+      <span class="sub-chip" id="subChip"></span>
+      <div class="user-chip"><i class="fa-solid fa-circle-user"></i><span id="userName"></span></div>
+      <button class="icon-btn" id="themeBtn" aria-label="Alternar tema claro/escuro"><i class="fa-solid fa-sun"></i></button>
+      <button class="logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+    </div>
+  </header>
+
+  <!-- ===== PAINEL DE RESUMO ===== -->
+  <section class="cards" aria-label="Resumo do mês">
+    <article class="card main">
+      <div class="label">Saldo líquido <i class="fa-solid fa-scale-balanced"></i></div>
+      <div class="value" id="cBalance">R$ 0,00</div>
+      <div class="sub" id="cGrowth">—</div>
+    </article>
+    <article class="card">
+      <div class="label">Vendas e ganhos <i class="fa-solid fa-arrow-trend-up pos"></i></div>
+      <div class="value pos" id="cGain">R$ 0,00</div>
+      <div class="sub" id="cGainCount">0 registros</div>
+    </article>
+    <article class="card">
+      <div class="label">Perdas e gastos <i class="fa-solid fa-arrow-trend-down neg"></i></div>
+      <div class="value neg" id="cLoss">R$ 0,00</div>
+      <div class="sub" id="cLossCount">0 registros</div>
+    </article>
+  </section>
+
+  <div class="layout">
+
+    <!-- ===== FORMULÁRIO DE NOVO REGISTRO ===== -->
+    <section class="panel">
+      <h2><i class="fa-solid fa-plus"></i> Novo registro</h2>
+      <form id="form" novalidate>
+        <div class="types" role="radiogroup" aria-label="Tipo de registro">
+          <label><input type="radio" name="tipo" value="venda" checked><i class="fa-solid fa-arrow-up"></i> Venda/Ganho</label>
+          <label><input type="radio" name="tipo" value="perda"><i class="fa-solid fa-arrow-down"></i> Perda/Gasto</label>
+          <label><input type="radio" name="tipo" value="conquista"><i class="fa-solid fa-trophy"></i> Conquista</label>
+        </div>
+        <label>Título
+          <input type="text" id="titulo" maxlength="80" placeholder="Ex.: Venda de 3 camisetas">
+        </label>
+        <div class="row2">
+          <label>Valor (R$)
+            <input type="number" id="valor" min="0" step="0.01" inputmode="decimal" placeholder="0,00">
+          </label>
+          <label>Data
+            <input type="date" id="data">
+          </label>
+        </div>
+        <label>Categoria
+          <input type="text" id="categoria" list="cats" maxlength="30" placeholder="Escolha ou digite">
+          <datalist id="cats">
+            <option>Trabalho</option><option>Vendas de Produtos</option><option>Investimento</option>
+            <option>Saúde</option><option>Estudo</option><option>Moradia</option>
+            <option>Alimentação</option><option>Lazer</option><option>Pessoal</option>
+          </datalist>
+        </label>
+        <label>Observações
+          <textarea id="obs" maxlength="400" placeholder="Detalhes opcionais"></textarea>
+        </label>
+        <div class="error" id="error" role="alert"></div>
+        <button class="btn" type="submit">Salvar registro</button>
+      </form>
+    </section>
+
+    <!-- ===== HISTÓRICO ===== -->
+    <section class="panel">
+      <h2><i class="fa-solid fa-clock-rotate-left"></i> Histórico de <span id="monthTitle"></span></h2>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-filter="todos">Todos</button>
+        <button class="tab" data-filter="venda">Vendas</button>
+        <button class="tab" data-filter="perda">Perdas</button>
+        <button class="tab" data-filter="conquista">Conquistas</button>
+      </div>
+      <table>
+        <thead><tr><th>Registro</th><th>Categoria</th><th>Data</th><th>Valor</th><th></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<script>
+/* ========== LÓGICA ========== */
+const USERS_KEY = 'agenda:usuarios';   // { email: {nome, salt, hash} }
+const SESSION_KEY = 'agenda:sessao';   // e-mail do usuário logado
+let currentUser = null;                // { email, nome }
+const LABELS = { venda: 'Venda/Ganho', perda: 'Perda/Gasto', conquista: 'Conquista' };
+const ICONS  = { venda: 'fa-arrow-up', perda: 'fa-arrow-down', conquista: 'fa-trophy' };
+
+const $ = id => document.getElementById(id);
+const brl = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/* Datas: usamos sempre o formato "AAAA-MM-DD" (evita problemas de fuso horário) */
+const hoje = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const formatDate = iso => iso.split('-').reverse().join('/');
+const monthOf = iso => iso.slice(0, 7);   // "AAAA-MM"
+
+/* Estado da aplicação */
+let records = [];   // carregado após o login
+let currentMonth = hoje().slice(0, 7);
+let currentFilter = 'todos';
+
+/* ---- Persistência (localStorage), separada por usuário ---- */
+const readJSON = (k, fallback) => { try { return JSON.parse(localStorage.getItem(k)) ?? fallback; } catch { return fallback; } };
+const dataKey = () => `agenda:dados:${currentUser.email}`;
+const load = () => readJSON(dataKey(), []);
+function save() {
+  try { localStorage.setItem(dataKey(), JSON.stringify(records)); }
+  catch { alert('Não foi possível salvar os dados neste navegador.'); }
+}
+
+/* Evita injeção de HTML ao exibir textos digitados pelo usuário */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+/* ---- Cálculos de um mês ---- */
+function totals(month) {
+  const list = records.filter(r => monthOf(r.data) === month);
+  const sum = t => list.filter(r => r.tipo === t).reduce((a, r) => a + r.valor, 0);
+  const gain = sum('venda'), loss = sum('perda');
+  return {
+    gain, loss, balance: gain - loss,
+    nGain: list.filter(r => r.tipo === 'venda').length,
+    nLoss: list.filter(r => r.tipo === 'perda').length
+  };
+}
+function shiftMonth(month, delta) {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/* ---- Renderização ---- */
+function render() {
+  $('monthPicker').value = currentMonth;
+  const [y, m] = currentMonth.split('-').map(Number);
+  $('monthTitle').textContent = new Date(y, m - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+  /* Cards */
+  const t = totals(currentMonth), prev = totals(shiftMonth(currentMonth, -1));
+  $('cBalance').textContent = brl(t.balance);
+  $('cBalance').className = 'value ' + (t.balance >= 0 ? 'pos' : 'neg');
+  $('cGain').textContent = brl(t.gain);
+  $('cLoss').textContent = brl(t.loss);
+  $('cGainCount').textContent = `${t.nGain} ${t.nGain === 1 ? 'registro' : 'registros'}`;
+  $('cLossCount').textContent = `${t.nLoss} ${t.nLoss === 1 ? 'registro' : 'registros'}`;
+
+  /* Crescimento do saldo em relação ao mês anterior */
+  const g = $('cGrowth');
+  if (prev.balance === 0 && t.balance === 0) g.textContent = 'Sem dados para comparar';
+  else if (prev.balance === 0) g.textContent = 'Mês anterior sem saldo';
+  else {
+    const pct = ((t.balance - prev.balance) / Math.abs(prev.balance)) * 100;
+    g.innerHTML = `<span class="${pct >= 0 ? 'pos' : 'neg'}"><i class="fa-solid ${pct >= 0 ? 'fa-caret-up' : 'fa-caret-down'}"></i> ${Math.abs(pct).toFixed(1)}%</span> vs. mês anterior`;
+  }
+
+  /* Tabela */
+  const list = records
+    .filter(r => monthOf(r.data) === currentMonth && (currentFilter === 'todos' || r.tipo === currentFilter))
+    .sort((a, b) => b.data.localeCompare(a.data) || b.id - a.id);
+
+  $('tbody').innerHTML = list.length ? list.map(r => {
+    const sign = r.tipo === 'perda' ? '−' : r.tipo === 'venda' ? '+' : '';
+    const cls = r.tipo === 'perda' ? 'neg' : r.tipo === 'venda' ? 'pos' : '';
+    return `<tr>
+      <td class="c-main">
+        <div class="t-title">${esc(r.titulo)}</div>
+        <span class="badge ${r.tipo}"><i class="fa-solid ${ICONS[r.tipo]}"></i> ${LABELS[r.tipo]}</span>
+        ${r.obs ? `<div class="t-note">${esc(r.obs)}</div>` : ''}
+      </td>
+      <td class="c-cat">${esc(r.categoria || '—')}</td>
+      <td class="c-date">${formatDate(r.data)}</td>
+      <td class="c-val amount ${cls}">${r.valor ? sign + ' ' + brl(r.valor) : '—'}</td>
+      <td class="c-act"><button class="del" data-id="${r.id}" aria-label="Excluir ${esc(r.titulo)}"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5" class="empty">Nenhum registro neste filtro. Use o formulário para adicionar o primeiro.</td></tr>`;
+}
+
+/* ---- Eventos ---- */
+/* Navegação de mês */
+$('prevMonth').onclick = () => { currentMonth = shiftMonth(currentMonth, -1); render(); };
+$('nextMonth').onclick = () => { currentMonth = shiftMonth(currentMonth, 1); render(); };
+$('monthPicker').onchange = e => { if (e.target.value) { currentMonth = e.target.value; render(); } };
+
+/* Abas de filtro */
+document.querySelectorAll('.tab').forEach(btn => btn.onclick = () => {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.filter;
+  render();
+});
+
+/* Excluir registro (delegação de evento) */
+$('tbody').onclick = e => {
+  const btn = e.target.closest('.del');
+  if (!btn) return;
+  if (confirm('Excluir este registro?')) {
+    records = records.filter(r => r.id !== Number(btn.dataset.id));
+    save(); render();
+  }
+};
+
+/* Salvar novo registro */
+$('form').onsubmit = e => {
+  e.preventDefault();
+  if (isBlocked()) return checkAccess();   // vencimento pode ter passado com a página aberta
+  const tipo = document.querySelector('input[name=tipo]:checked').value;
+  const titulo = $('titulo').value.trim();
+  const valor = parseFloat($('valor').value) || 0;
+  const data = $('data').value;
+  const err = $('error');
+
+  /* Validação: valor obrigatório para vendas e perdas */
+  if (!titulo) return err.textContent = 'Informe um título.';
+  if (!data) return err.textContent = 'Informe a data.';
+  if (tipo !== 'conquista' && valor <= 0) return err.textContent = 'Informe um valor maior que zero.';
+  err.textContent = '';
+
+  records.push({ id: Date.now(), tipo, titulo, valor: tipo === 'conquista' ? valor : valor,
+                 data, categoria: $('categoria').value.trim(), obs: $('obs').value.trim() });
+  save();
+
+  /* Mostra o mês do registro recém-criado e limpa o formulário */
+  currentMonth = monthOf(data);
+  $('form').reset();
+  $('data').value = hoje();
+  render();
+};
+
+/* Tema claro/escuro (lembrado no navegador) */
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $('themeBtn').innerHTML = `<i class="fa-solid ${t === 'dark' ? 'fa-sun' : 'fa-moon'}"></i>`;
+  try { localStorage.setItem('agenda-tema', t); } catch {}
+}
+$('themeBtn').onclick = () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+
+/* ---- Inicialização ---- */
+setTheme((() => { try { return localStorage.getItem('agenda-tema'); } catch { return null; } })() || 'dark');
+/* ========== AUTENTICAÇÃO ==========
+   Observação: sem servidor, o login protege apenas a organização/privacidade
+   no navegador. A senha nunca é guardada em texto puro (PBKDF2 + salt). */
+let mode = 'login', fails = 0, lockUntil = 0;
+
+/* Hash da senha: PBKDF2 (Web Crypto). Se o navegador não oferecer (ex.: página aberta por http://IP),
+   usa um SHA-256 em JavaScript puro, para o login funcionar em qualquer lugar. */
+const hasSubtle = !!(window.crypto && crypto.subtle);
+const toHex = bytes => [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, '0')).join('');
+
+function sha256(msg) {
+  const K = [], H = [];
+  for (let n = 2; K.length < 64; n++) {
+    let prime = true;
+    for (let d = 2; d * d <= n; d++) if (n % d === 0) { prime = false; break; }
+    if (!prime) continue;
+    if (H.length < 8) H.push((Math.pow(n, 0.5) % 1) * 4294967296 | 0);
+    K.push((Math.pow(n, 1 / 3) % 1) * 4294967296 | 0);
+  }
+  const l = msg.length, total = ((l + 9 + 63) >> 6) << 6;
+  const buf = new Uint8Array(total); buf.set(msg); buf[l] = 0x80;
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(total - 4, (l * 8) >>> 0); dv.setUint32(total - 8, Math.floor(l * 8 / 4294967296));
+  let h = H.slice(); const w = new Int32Array(64);
+  for (let o = 0; o < total; o += 64) {
+    for (let i = 0; i < 16; i++) w[i] = dv.getInt32(o + i * 4);
+    for (let i = 16; i < 64; i++) {
+      const x = w[i - 15], y = w[i - 2];
+      w[i] = (w[i - 16] + ((x >>> 7 | x << 25) ^ (x >>> 18 | x << 14) ^ (x >>> 3)) + w[i - 7] + ((y >>> 17 | y << 15) ^ (y >>> 19 | y << 13) ^ (y >>> 10))) | 0;
+    }
+    let [a, b, c, d, e, f, g, k] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = (k + ((e >>> 6 | e << 26) ^ (e >>> 11 | e << 21) ^ (e >>> 25 | e << 7)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+      const t2 = (((a >>> 2 | a << 30) ^ (a >>> 13 | a << 19) ^ (a >>> 22 | a << 10)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+      k = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+    }
+    h = [a, b, c, d, e, f, g, k].map((v, i) => (h[i] + v) | 0);
+  }
+  const out = new DataView(new ArrayBuffer(32));
+  h.forEach((v, i) => out.setInt32(i * 4, v));
+  return new Uint8Array(out.buffer);
+}
+
+async function hashPassword(pw, saltHex, alg) {
+  if (alg === 'js') {
+    let d = new TextEncoder().encode(saltHex + ':' + pw);
+    for (let i = 0; i < 20000; i++) d = sha256(d);
+    return toHex(d);
+  }
+  const salt = Uint8Array.from(saltHex.match(/../g).map(h => parseInt(h, 16)));
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  return toHex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, key, 256));
+}
+const newSalt = () => toHex(crypto.getRandomValues(new Uint8Array(16)));
+
+/* Alterna entre Entrar e Criar conta */
+function setMode(m) {
+  mode = m;
+  const reg = m === 'register';
+  $('modeLogin').classList.toggle('active', !reg);
+  $('modeRegister').classList.toggle('active', reg);
+  $('nameField').hidden = !reg;
+  $('meterBox').hidden = !reg;
+  $('authTitle').textContent = reg ? 'Crie sua conta' : 'Bem-vindo de volta';
+  $('authLead').textContent = reg ? 'Leva menos de um minuto.' : 'Entre para ver seus registros.';
+  $('authSubmit').textContent = reg ? 'Criar conta' : 'Entrar';
+  $('authPass').autocomplete = reg ? 'new-password' : 'current-password';
+  $('authError').textContent = '';
+}
+
+/* Mostrar/ocultar senha */
+$('eye').onclick = () => {
+  const p = $('authPass'), show = p.type === 'password';
+  p.type = show ? 'text' : 'password';
+  $('eye').innerHTML = `<i class="fa-regular ${show ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+};
+
+/* Medidor de força da senha (apenas no cadastro) */
+$('authPass').oninput = () => {
+  const p = $('authPass').value;
+  const score = p ? [p.length >= 8, /[a-z]/.test(p) && /[A-Z]/.test(p), /[0-9]/.test(p), /[^A-Za-z0-9]/.test(p)].filter(Boolean).length : 0;
+  const names = ['', 'Fraca', 'Razoável', 'Boa', 'Forte'];
+  const colors = ['', 'var(--loss)', 'var(--goal)', 'var(--brand)', 'var(--gain)'];
+  $('meterFill').style.width = score * 25 + '%';
+  $('meterFill').style.background = colors[score];
+  $('meterText').textContent = p ? 'Força da senha: ' + names[score] : '';
+};
+$('modeLogin').onclick = () => setMode('login');
+$('modeRegister').onclick = () => setMode('register');
+
+$('authForm').onsubmit = async e => {
+  e.preventDefault();
+  const err = $('authError'), btn = $('authSubmit');
+  const nome = $('authName').value.trim();
+  const email = $('authEmail').value.trim().toLowerCase();
+  const pass = $('authPass').value;
+  err.textContent = '';
+
+  if (!/^[^ @]+@[^ @]+[.][^ @]+$/.test(email)) return err.textContent = 'Informe um e-mail válido.';
+  if (pass.length < 8) return err.textContent = 'A senha precisa ter pelo menos 8 caracteres.';
+  if (mode === 'register' && nome.length < 2) return err.textContent = 'Informe seu nome.';
+
+  btn.classList.add('loading');
+  try {
+    const users = readJSON(USERS_KEY, {});
+
+    if (mode === 'register') {
+      if (users[email]) return err.textContent = 'Este e-mail já está cadastrado. Use a aba Entrar.';
+      const salt = newSalt(), alg = hasSubtle ? 'pbkdf2' : 'js';
+      users[email] = { nome, salt, alg, hash: await hashPassword(pass, salt, alg) };
+      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+      return enter(email, nome);
+    }
+
+    /* Login: bloqueio temporário após 5 tentativas erradas */
+    if (Date.now() < lockUntil) return err.textContent = `Muitas tentativas. Aguarde ${Math.ceil((lockUntil - Date.now()) / 1000)} s.`;
+    const u = users[email], alg = u && (u.alg || 'pbkdf2');
+    if (alg === 'pbkdf2' && !hasSubtle) return err.textContent = 'Abra o site por localhost ou HTTPS (Live Server) para entrar com esta conta.';
+    const ok = u && (await hashPassword(pass, u.salt, alg)) === u.hash;
+    if (!ok) {
+      if (++fails >= 5) { lockUntil = Date.now() + 30000; fails = 0; }
+      return err.textContent = 'E-mail ou senha incorretos.';   // mensagem genérica de propósito
+    }
+    fails = 0;
+    enter(email, u.nome);
+  } catch (x) {
+    err.textContent = 'Não foi possível concluir. Verifique se o navegador permite salvar dados (não use aba anônima).';
+    console.error(x);
+  } finally {
+    btn.classList.remove('loading');
+  }
+};
+
+/* Entra no painel: guarda a sessão e carrega os dados DESTE usuário */
+function enter(email, nome) {
+  currentUser = { email, nome };
+  try { localStorage.setItem(SESSION_KEY, email); } catch {}
+  records = load();
+  currentMonth = hoje().slice(0, 7);
+  currentFilter = 'todos';
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.filter === 'todos'));
+  $('userName').textContent = nome;
+  $('authForm').reset(); $('authPass').type = 'password'; $('meterFill').style.width = '0'; $('meterText').textContent = '';
+  $('data').value = hoje();   // data automática = hoje
+  checkAccess();   // decide entre o painel e a tela de pagamento
+}
+
+/* Sair: encerra a sessão e volta para o login */
+$('logoutBtn').onclick = () => {
+  try { localStorage.removeItem(SESSION_KEY); } catch {}
+  currentUser = null; records = [];
+  $('app').hidden = true;
+  $('paywall').hidden = true;
+  $('auth').hidden = false;
+  setMode('login');
+};
+
+/* ========== ASSINATURA ==========
+   Mensalidade fixa com vencimento todo dia 05. Meses pagos ficam em
+   localStorage, por usuário: ['2026-10', '2026-11', ...].
+   Regra: a partir do dia 05, sem o mês atual pago, o painel é bloqueado. */
+const PRICE = 29.99, DUE_DAY = 5, PIX_KEY = '61998647838';
+const subKey = () => `agenda:assinatura:${currentUser.email}`;
+const paidMonths = () => readJSON(subKey(), []);
+const isBlocked = () => new Date().getDate() >= DUE_DAY && !paidMonths().includes(hoje().slice(0, 7));
+
+/* Mostra o painel ou a tela de pagamento pendente */
+function checkAccess() {
+  const blocked = isBlocked();
+  $('auth').hidden = true;
+  $('app').hidden = blocked;
+  $('paywall').hidden = !blocked;
+  if (blocked) fillPaywall(); else { updateChip(); render(); }
+}
+
+function fillPaywall() {
+  const d = new Date(), late = d.getDate() - DUE_DAY;
+  const due = `${String(DUE_DAY).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+  $('payAmount').textContent = brl(PRICE);
+  $('payDue').textContent = due;
+  $('pixKey').textContent = PIX_KEY;
+  $('payLead').textContent = late === 0
+    ? 'Sua mensalidade vence hoje. Pague para continuar usando o painel.'
+    : `Sua mensalidade venceu há ${late} ${late === 1 ? 'dia' : 'dias'}. Pague para liberar o painel.`;
+}
+
+/* Etiqueta de situação no topo do painel */
+function updateChip() {
+  const chip = $('subChip'), d = new Date(), paid = paidMonths().includes(hoje().slice(0, 7));
+  const mm = n => String(n).padStart(2, '0');
+  if (paid) {
+    const nx = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    chip.textContent = `Assinatura em dia · próx. venc. ${mm(DUE_DAY)}/${mm(nx.getMonth() + 1)}`;
+    chip.className = 'sub-chip';
+  } else {
+    chip.textContent = `Vence em ${mm(DUE_DAY)}/${mm(d.getMonth() + 1)} · ${brl(PRICE)}`;
+    chip.className = 'sub-chip warn';
+  }
+}
+
+/* "Já realizei o pagamento": simula a liberação manual do mês atual */
+$('payBtn').onclick = () => {
+  if (!confirm('Confirmar que você já realizou o pagamento via PIX?')) return;
+  const m = paidMonths(); m.push(hoje().slice(0, 7));
+  try { localStorage.setItem(subKey(), JSON.stringify(m)); }
+  catch { return alert('Não foi possível salvar neste navegador.'); }
+  checkAccess();
+};
+$('payLogout').onclick = () => $('logoutBtn').click();
+
+/* Copiar chave PIX */
+$('copyPix').onclick = async () => {
+  const b = $('copyPix');
+  try { await navigator.clipboard.writeText(PIX_KEY); b.innerHTML = '<i class="fa-solid fa-check"></i> Copiado'; }
+  catch { b.textContent = 'Selecione a chave e copie'; }
+  setTimeout(() => b.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar chave', 2000);
+};
+
+/* Reavalia o bloqueio quando a aba volta ao foco e a cada minuto (ex.: virou o dia 05) */
+const recheck = () => { if (currentUser && !$('app').hidden && isBlocked()) checkAccess(); };
+document.addEventListener('visibilitychange', recheck);
+setInterval(recheck, 60000);
+
+/* Ao abrir o site: restaura a sessão, se existir; senão mostra o login */
+(function boot() {
+  const email = (() => { try { return localStorage.getItem(SESSION_KEY); } catch { return null; } })();
+  const u = email && readJSON(USERS_KEY, {})[email];
+  if (u) enter(email, u.nome);
+  else $('auth').hidden = false;
+})();
+</script>
+</body>
+</html>
